@@ -1,0 +1,33 @@
+# General
+name: REPLACE
+log_dir: /path/to/logs
+
+# Datset setup
+data: /path/to/dataset/parent
+set: RandSplitCIFAR100
+seed: REPLACE
+num_tasks: 20
+
+# Model
+model: GEMResNet18
+conv_type: StandardConv
+bn_type: NonAffineNoStatsBN
+conv_init: default
+output_size: 5
+
+# Optimizer
+optimizer: adam
+lr: 0.01
+
+# Training
+epochs: 250
+batch_size: 128
+test_batch_size: 128
+
+# Adaptation setup
+adapt: True
+adaptor: gt
+individual_heads: True
+hard_alphas: True
+adapt_lrs: [200]
+eval_ckpts: []
