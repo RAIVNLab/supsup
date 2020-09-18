@@ -1,6 +1,7 @@
 import os
 import pathlib
 import random
+import numpy as np
 import math
 
 import torch
@@ -16,11 +17,9 @@ import schedulers
 import trainers
 import utils
 
-import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from collections import defaultdict
-
 
 
 def main():
@@ -162,7 +161,7 @@ def main():
                 best_acc1 = curr_acc1
 
         utils.write_result_to_csv(
-            name=f"{args.name}~{args.set}~task={args.task_eval}",
+            name=f"{args.name}~set={args.set}~task={args.task_eval}",
             curr_acc1=curr_acc1,
             best_acc1=best_acc1,
             save_dir=run_base_dir,
@@ -238,13 +237,17 @@ def main():
             optimizer = optim.SGD(
                 params, lr=lr, momentum=args.momentum, weight_decay=args.wd
             )
+        
+        task0_epochs = args.task0_epochs or args.epochs
+        train_epochs = task0_epochs if idx == 0 else args.epochs
+
         if args.no_scheduler:
             scheduler = None
         else:
-            scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
+            scheduler = CosineAnnealingLR(optimizer, T_max=train_epochs)
 
         # Train on the current task.
-        for epoch in range(1, args.epochs + 1):
+        for epoch in range(1, train_epochs + 1):
             train(
                 model,
                 writer,
@@ -272,6 +275,13 @@ def main():
                 and len(data_loader.train_loader) * epoch > args.iter_lim
             ):
                 break
+
+        utils.write_result_to_csv(
+            name=f"{args.name}~set={args.set}~task={idx}",
+            curr_acc1=curr_acc1[idx],
+            best_acc1=best_acc1[idx],
+            save_dir=run_base_dir,
+        )
 
         # Save memory by deleting the optimizer and scheduler.
         del optimizer, scheduler, params
@@ -368,13 +378,6 @@ def main():
             run_base_dir / "final.pt",
         )
 
-    for idx in range(args.num_tasks):
-        utils.write_result_to_csv(
-            name=args.name + f"~task={args.set}_{idx}",
-            curr_acc1=curr_acc1[idx],
-            best_acc1=best_acc1[idx],
-            save_dir=run_base_dir,
-        )
 
     return adapt_acc1
 
