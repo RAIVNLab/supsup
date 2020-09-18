@@ -48,6 +48,42 @@ def set_mask(model, task):
     model.apply(lambda m: cond_set_mask(m, task))
 
 
+def freeze_model_weights(model: nn.Module):
+    for n, m in model.named_modules():
+        if isinstance(m, nn.Conv2d):
+            print(f"=> Freezing weight for {n}")
+            m.weight.requires_grad_(False)
+
+            if m.weight.grad is not None:
+                m.weight.grad = None
+                print(f"==> Resetting grad value for {n} -> None")
+
+
+def freeze_model_scores(model: nn.Module, task_idx: int):
+    for n, m in model.named_modules():
+        if isinstance(m, nn.Conv2d):
+            print(f"=> Freezing weight for {n}")
+            m.scores[task_idx].requires_grad_(False)
+
+            if m.scores[task_idx].grad is not None:
+                m.scores[task_idx].grad = None
+                print(f"==> Resetting grad value for {n} scores -> None")
+
+
+def unfreeze_model_weights(model: nn.Module):
+    for n, m in model.named_modules():
+        if isinstance(m, nn.Conv2d):
+            print(f"=> Unfreezing weight for {n}")
+            m.weight.requires_grad_(True)
+
+
+def unfreeze_model_scores(model: nn.Module, task_idx: int):
+    for n, m in model.named_modules():
+        if isinstance(m, nn.Conv2d):
+            print(f"=> Unfreezing weight for {n}")
+            m.scores[task_idx].requires_grad_(True)
+
+
 def set_gpu(model):
     if args.multigpu is None:
         args.device = torch.device("cpu")
@@ -74,9 +110,7 @@ def write_result_to_csv(**kwargs):
     results = pathlib.Path(args.log_dir) / "results.csv"
 
     if not results.exists():
-        results.write_text(
-            "Date Finished,Name,Current Val,Best Val,Save Directory\n"
-        )
+        results.write_text("Date Finished,Name,Current Val,Best Val,Save Directory\n")
 
     now = time.strftime("%m-%d-%y_%H:%M:%S")
 
@@ -116,7 +150,6 @@ def write_adapt_results(**kwargs):
                 "{adapt_acc1:.04f}\n"
             ).format(now=now, **kwargs)
         )
-
 
 
 class BasicVisionDataset(torch.utils.data.Dataset):
