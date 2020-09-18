@@ -238,8 +238,7 @@ def main():
                 params, lr=lr, momentum=args.momentum, weight_decay=args.wd
             )
         
-        task0_epochs = args.task0_epochs or args.epochs
-        train_epochs = task0_epochs if idx == 0 else args.epochs
+        train_epochs = args.epochs
 
         if args.no_scheduler:
             scheduler = None
