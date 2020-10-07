@@ -11,7 +11,9 @@ import pathlib
 import random as r
 
 
-def cond_cache_masks(m,):
+def cond_cache_masks(
+    m,
+):
     if hasattr(m, "cache_masks"):
         m.cache_masks()
 
@@ -31,7 +33,6 @@ def train(
     model.apply(lambda m: setattr(m, "num_tasks_learned", task_idx))
 
     train_loader_iter = iter(train_loader)
-
 
     # Attempt to adapt
     if task_idx > 0 and epoch == 1:
@@ -107,11 +108,22 @@ def train(
             for n, m in model.named_modules():
                 if isinstance(m, nn.Conv2d):
                     if args.reinit_adapt.startswith("running_mean"):
-                        stacked_masks = torch.stack(tuple(m.scores[:task_idx]))
-                        m.scores[task_idx].data = stacked_masks.mean(dim=0).data
+                        stacked_scores = torch.stack(tuple(m.scores[:task_idx]))
+                        stacked_masks = m.stacked[:task_idx]
+
+                        init_scores = m.scores[task_idx].data.flatten()
+                        init_scores_shape = m.scores[task_idx].shape
+
+                        init_scores_idx = init_scores.flatten().argsort()
+                        running_mean_idx = stacked_masks.mean(0).flatten().argsort()
+
+                        init_scores[running_mean_idx] = init_scores[init_scores_idx]
+                        m.scores[task_idx].data = init_scores.view(*init_scores_shape)
+                        m.scores[task_idx].data *= (
+                            stacked_scores.mean(0).norm().detach() / init_scores.norm().detach()
+                        )
                     else:
                         m.scores[task_idx].data = m.scores[predicted_similar_task].data
-
 
         print(f"=> Training from new initialization")
 
