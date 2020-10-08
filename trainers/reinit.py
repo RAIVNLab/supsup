@@ -111,13 +111,12 @@ def train(
                         stacked_scores = torch.stack(tuple(m.scores[:task_idx]))
                         stacked_masks = m.stacked[:task_idx]
 
-                        init_scores = m.scores[task_idx].data.flatten()
+                        init_scores = stacked_scores.mean(0).data.flatten()
                         init_scores_shape = m.scores[task_idx].shape
 
-                        init_scores_idx = init_scores.flatten().argsort()
+                        init_scores_idx = init_scores.flatten().abs().argsort()
                         running_mean_idx = stacked_masks.mean(0).flatten().argsort()
 
-                        init_scores[running_mean_idx] = init_scores[init_scores_idx]
                         m.scores[task_idx].data = init_scores.view(*init_scores_shape)
                         m.scores[task_idx].data *= (
                             stacked_scores.mean(0).norm().detach() / init_scores.norm().detach()
