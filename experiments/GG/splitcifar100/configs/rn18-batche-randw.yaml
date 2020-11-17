@@ -12,7 +12,7 @@ num_tasks: 20
 # Model
 model: GEMResNet18
 conv_type: VectorizedBatchEnsembles
-bn_type: NonAffineNoStatsBN
+bn_type: NonAffineBN
 conv_init: default
 output_size: 5
 
