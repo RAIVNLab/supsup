@@ -14,7 +14,7 @@ num_tasks: 20
 # Model setup
 model: GEMResNet18
 conv_type: MultitaskMaskConv
-bn_type: NonAffineBN
+bn_type: MultitaskNonAffineBN
 conv_init: signed_constant
 output_size: 5
 er_sparsity: True

@@ -11,7 +11,7 @@ num_tasks: 20
 # Model
 model: GEMResNet18
 conv_type: StandardConv
-bn_type: NonAffineBN
+bn_type: MultitaskNonAffineBN
 conv_init: default
 output_size: 5
 
